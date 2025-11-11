@@ -46,11 +46,6 @@ public class TestController {
         return "관리자 접근이 허용되었습니다.";
     }
 
-    @GetMapping("/login")
-    public String login() {
-        return "login";
-    }
-
     @GetMapping("/")
     public String home() {
         return "home page";
