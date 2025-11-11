@@ -7,6 +7,7 @@ import jsh.project.minisecurity.security.authentication.UsernamePasswordAuthenti
 import jsh.project.minisecurity.security.encoder.BCryptPasswordEncoder;
 import jsh.project.minisecurity.security.encoder.PasswordEncoder;
 import jsh.project.minisecurity.security.user.InMemoryUserDetailsService;
+import jsh.project.minisecurity.security.user.SimpleUserDetails;
 import jsh.project.minisecurity.security.user.UserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,8 +21,21 @@ public class SecurityBeansConfig {
     }
 
     @Bean
-    public UserDetailsService userDetailsService() {
-        return new InMemoryUserDetailsService();
+    public UserDetailsService userDetailsService(PasswordEncoder passwordEncoder) {
+        InMemoryUserDetailsService service = new InMemoryUserDetailsService();
+
+        service.addUser(new SimpleUserDetails(
+                "user",
+                passwordEncoder.encode("1234"),
+                List.of("ROLE_USER")
+        ));
+        service.addUser(new SimpleUserDetails(
+                "admin",
+                passwordEncoder.encode("admin123"),
+                List.of("ROLE_ADMIN")
+        ));
+
+        return service;
     }
 
     @Bean

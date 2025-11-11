@@ -29,8 +29,8 @@ public class AuthorizationFilter extends OncePerRequestFilter {
 
         // 인증 여부 확인
         if (authentication == null || !authentication.isAuthenticated()) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write("401: Unauthorized");
+            // 로그인 페이지로 리다이렉트
+            response.sendRedirect("/login?redirect=" + request.getRequestURI());
             return;
         }
 
