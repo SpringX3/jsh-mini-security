@@ -39,9 +39,10 @@ public abstract class OncePerRequestFilter implements Filter {
     }
 
     // 실제 처리 로직은 서브 클래스에서 구현
-    protected abstract void doFilterInternal(HttpServletRequest request,
-                                             HttpServletResponse response,
-                                             FilterChain chain)
+    protected abstract void doFilterInternal(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain chain)
             throws IOException, ServletException;
 
     // 중복 실행 방지용 키
