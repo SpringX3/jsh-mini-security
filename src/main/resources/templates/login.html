@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>로그인</title>
+</head>
+<body>
+<h2>로그인</h2>
+<form method="POST" action="/login" th:if="${redirect}" th:object="${redirect}">
+    <label>Username: <input type="text" name="username"/></label><br/>
+    <label>Password: <input type="password" name="password"/></label><br/>
+    <input type="hidden" name="redirect" th:value="${redirect}"/>
+    <button type="submit">로그인</button>
+</form>
+</body>
+</html>
