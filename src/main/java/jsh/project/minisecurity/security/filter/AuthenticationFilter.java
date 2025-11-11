@@ -27,7 +27,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 
         // 로그인 요청이 아니면 건너뜀
         if (!request.getRequestURI().equals("/login") ||
-                !request.getRequestURI().equalsIgnoreCase("POST")) {
+                !request.getMethod().equalsIgnoreCase("POST")) {
             chain.doFilter(request, response);
             return;
         }
