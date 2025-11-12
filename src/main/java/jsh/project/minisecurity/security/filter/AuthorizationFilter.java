@@ -18,8 +18,7 @@ public class AuthorizationFilter extends OncePerRequestFilter {
             FilterChain chain
     ) throws IOException, ServletException {
 
-        // 검사에서 제외
-        if (request.getRequestURI().equals("/login") || request.getRequestURI().equals("/")) {
+        if (SecurityWhitelist.matches(request.getRequestURI())) {
             chain.doFilter(request, response);
             return;
         }
