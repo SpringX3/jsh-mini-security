@@ -20,6 +20,9 @@ public final class SecurityWhitelist {
     }
 
     public static boolean matches(String uri) {
+        if (uri == null) {
+            return false;
+        }
         return EXACT_MATCHES.contains(uri) ||
                 PREFIX_MATCHES.stream().anyMatch(uri::startsWith);
     }
