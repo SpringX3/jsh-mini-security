@@ -5,18 +5,21 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.ArrayList;
 import jsh.project.minisecurity.security.authentication.Authentication;
 import jsh.project.minisecurity.security.authentication.AuthenticationManager;
 import jsh.project.minisecurity.security.authentication.UsernamePasswordAuthenticationToken;
-import jsh.project.minisecurity.security.context.SecurityContext;
-import jsh.project.minisecurity.security.context.SecurityContextHolder;
+import jsh.project.minisecurity.security.jwt.JwtService;
+import jsh.project.minisecurity.security.user.SimpleUserDetails;
 
 public class AuthenticationFilter extends OncePerRequestFilter {
 
     private final AuthenticationManager authenticationManager;
+    private final JwtService jwtService;
 
-    public AuthenticationFilter(AuthenticationManager authenticationManager) {
+    public AuthenticationFilter(AuthenticationManager authenticationManager, JwtService jwtService) {
         this.authenticationManager = authenticationManager;
+        this.jwtService = jwtService;
     }
 
     @Override
@@ -48,13 +51,22 @@ public class AuthenticationFilter extends OncePerRequestFilter {
         try {
             Authentication authResult = authenticationManager.authenticate(authRequest);
 
-            // 성공 시 SecurityContext에 저장
-            SecurityContext context = new SecurityContext();
-            context.setAuthentication(authResult);
-            SecurityContextHolder.setContext(context);
+            // 성공 시 JWT token 발급
+            SimpleUserDetails user = (SimpleUserDetails) authResult.getPrincipal();
+            String token = jwtService.generateToken(
+                    user.getUsername(),
+                    new ArrayList<>(authResult.getAuthorities())
+            );
+
+            // 성공 시 SecurityContext에 저장 -> JwtAuthenticationFilter에서 진행
+//            SecurityContext context = new SecurityContext();
+//            context.setAuthentication(authResult);
+//            SecurityContextHolder.setContext(context);
 
             response.setStatus(HttpServletResponse.SC_OK);
+            response.setContentType("application/json");
             response.getWriter().write("로그인 성공: " + username);
+            response.getWriter().write("{\"token\":\"" + token + "\"}");
         } catch (RuntimeException e) {
             // 실패 시 401 반환
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);

@@ -1,0 +1,5 @@
+language: ko         # 리뷰 언어: 한국어
+reviews:
+  profile: chill
+  high_level_summary: true
+  changed_files_summary: true
