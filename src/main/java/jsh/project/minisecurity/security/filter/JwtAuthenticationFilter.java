@@ -26,7 +26,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             FilterChain chain)
             throws IOException, ServletException {
 
-        if (request.getRequestURI().startsWith("/login")) {
+        if (SecurityWhitelist.matches(request.getRequestURI())) {
             chain.doFilter(request, response);
             return;
         }
