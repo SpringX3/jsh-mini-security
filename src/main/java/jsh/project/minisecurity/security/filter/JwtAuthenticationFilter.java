@@ -33,24 +33,28 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String authHeader = request.getHeader("Authorization");
 
-        if (authHeader != null || authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7);
+        // header가 null이면 필터 넘김
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            chain.doFilter(request, response);
+            return;
+        }
 
-            try {
-                if (!jwtService.isExpired(token)) {
-                    String username = jwtService.getUsername(token);
-                    List<String> roles = jwtService.getRoles(token);
+        String token = authHeader.substring(7);
 
-                    Authentication authentication = new UsernamePasswordAuthenticationToken(username, null, roles);
-                    SecurityContext context = new SecurityContext();
-                    context.setAuthentication(authentication);
-                    SecurityContextHolder.setContext(context);
-                }
-            } catch (Exception e) {
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.getWriter().write("JWT 오류: " + e.getMessage());
-                return;
+        try {
+            if (!jwtService.isExpired(token)) {
+                String username = jwtService.getUsername(token);
+                List<String> roles = jwtService.getRoles(token);
+
+                Authentication authentication = new UsernamePasswordAuthenticationToken(username, null, roles);
+                SecurityContext context = new SecurityContext();
+                context.setAuthentication(authentication);
+                SecurityContextHolder.setContext(context);
             }
+        } catch (Exception e) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("JWT 오류: " + e.getMessage());
+            return;
         }
 
         chain.doFilter(request, response);
