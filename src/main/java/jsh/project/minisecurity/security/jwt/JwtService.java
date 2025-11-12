@@ -7,7 +7,9 @@ import io.jsonwebtoken.security.Keys;
 import java.util.Date;
 import java.util.List;
 import javax.crypto.SecretKey;
+import org.springframework.stereotype.Service;
 
+@Service
 public class JwtService {
     private final SecretKey key = Keys.hmacShaKeyFor("MySuperSecretKeyForJwtExample12345".getBytes());
     private final long EXPIRATION_TIME = 1000L * 60 * 60;
