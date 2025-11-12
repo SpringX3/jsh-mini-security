@@ -1,7 +1,5 @@
+language: ko         # 리뷰 언어: 한국어
 reviews:
-  language: ko         # 리뷰 언어: 한국어
-  tone: formal         # 어조: formal / friendly / concise 등 선택 가능
-  summary: true        # 리뷰 요약 포함
-  suggestions: true    # 코드 수정 제안 포함
-  complexity_analysis: true  # 복잡도 분석 포함
-  tests_check: true    # 테스트 관련 검증 포함
+  profile: chill
+  high_level_summary: true
+  changed_files_summary: true
