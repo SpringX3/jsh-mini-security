@@ -10,6 +10,7 @@ import jsh.project.minisecurity.security.authentication.Authentication;
 import jsh.project.minisecurity.security.authentication.AuthenticationManager;
 import jsh.project.minisecurity.security.authentication.UsernamePasswordAuthenticationToken;
 import jsh.project.minisecurity.security.jwt.JwtService;
+import jsh.project.minisecurity.security.user.SimpleUserDetails;
 
 public class AuthenticationFilter extends OncePerRequestFilter {
 
@@ -51,8 +52,9 @@ public class AuthenticationFilter extends OncePerRequestFilter {
             Authentication authResult = authenticationManager.authenticate(authRequest);
 
             // 성공 시 JWT token 발급
+            SimpleUserDetails user = (SimpleUserDetails) authResult.getPrincipal();
             String token = jwtService.generateToken(
-                    (String) authResult.getPrincipal(),
+                    user.getUsername(),
                     new ArrayList<>(authResult.getAuthorities())
             );
 
