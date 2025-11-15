@@ -1,8 +1,5 @@
 # Spring Security 직접 구현 (Mini Security Framework)
 
-이 문서는 **Spring Security의 인증/인가 구조를 직접 구현**하며 학습한 내용을 정리한 것이다.
-Spring Security의 내부 동작 원리를 이해하고, 실제로 동작 가능한 **미니 보안 프레임워크**를 만드는 과정을 담고 있다.
-(`SecurityFilterChain` 및 `WebSecurityConfigurerAdapter` 구성 제외)
 
 ---
 
