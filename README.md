@@ -1,8 +1,5 @@
 # Spring Security 직접 구현 (Mini Security Framework)
 
-
----
-
 ## 🧩 전체 개요
 
 Spring Security는 **Filter 기반 보안 프레임워크**다.
