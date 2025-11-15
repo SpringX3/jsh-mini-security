@@ -33,6 +33,7 @@ Spring Security는 **Filter 기반 보안 프레임워크**다.
 
   ```java
   new UsernamePasswordAuthenticationToken(username, password)
+  new UsernamePasswordAuthenticationToken(username, password, authorities)
   ```
 
   로그인 요청 시 "인증 전" 상태로 생성되며, 인증 성공 후 "인증 완료" 상태로 갱신된다.
@@ -148,29 +149,7 @@ Header.Payload.Signature
 
 ---
 
-## 🌐 CORS & Swagger 설정
-
-### CORS 허용
-
-브라우저 환경에서 JWT를 사용하기 위해 Authorization 헤더를 허용한다.
-
-```java
-registry.addMapping("/**")
-        .
-
-allowedOrigins("http://localhost:3000")
-        .
-
-allowedHeaders("*")
-        .
-
-exposedHeaders("Authorization")
-        .
-
-allowedMethods("*");
-```
-
----
+## 🌐 Swagger 설정
 
 ### Swagger 연동
 
