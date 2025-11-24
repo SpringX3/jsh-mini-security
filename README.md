@@ -1,5 +1,12 @@
 # Spring Security 직접 구현 (Mini Security Framework)
 
+## 프로젝트 목표
+
+이 구현의 목적은 **Spring Security의 내부 원리를 완전히 이해**하고,
+이를 바탕으로 자신만의 **경량 인증/인가 프레임워크**를 구축하는 것이다.
+
+---
+
 ## 🧩 전체 개요
 
 Spring Security는 **Filter 기반 보안 프레임워크**다.
@@ -13,11 +20,55 @@ Spring Security는 **Filter 기반 보안 프레임워크**다.
 [Filter Chain]
    ↓
  ├── JwtAuthenticationFilter      → JWT 검증
- ├── AuthenticationFilter          → 로그인 요청 처리
- ├── AuthorizationFilter           → 접근 권한 검사
+├── AuthenticationFilter          → 로그인 요청 처리
+├── AuthorizationFilter           → 접근 권한 검사
    ↓
 [DispatcherServlet → Controller]
 ```
+
+---
+
+## 구현 내용
+
+### Authentication 코어
+
+* `Authentication`, `UsernamePasswordAuthenticationToken`으로 인증 요청/응답 객체를 직접 정의했다.
+* `AuthenticationManager`의 구현체인 `ProviderManager`가 등록된 `AuthenticationProvider` 컬렉션을 순회하며 실제 인증을 수행한다.
+* `UsernamePasswordAuthenticationProvider`는 `UserDetailsService` + `PasswordEncoder` 조합으로 사용자 조회와 비밀번호 검증을 담당한다.
+* `SecurityBeansConfig`가 `BCryptPasswordEncoder`, `InMemoryUserDetailsService`, `ProviderManager` 등을 Bean 으로 노출하고,
+  `user/1234`, `admin/admin123` 계정을 미리 메모리에 적재한다.
+
+### 사용자 저장소 & PasswordEncoder
+
+* `UserDetails`, `UserDetailsService`, `SimpleUserDetails`, `InMemoryUserDetailsService`로 최소한의 사용자/권한 모델을 구성했다.
+* `PasswordEncoder` 인터페이스를 따라 `BCryptPasswordEncoder`와 `PlainTextPasswordEncoder`를 구현하여 상황에 따라 교체 가능하다.
+* In-memory 저장소는 `Map` 기반으로 구성하여 학습 목적에 맞게 간단히 계정을 추가/삭제할 수 있다.
+
+### SecurityContext
+
+* `SecurityContext`와 `SecurityContextHolder`를 직접 구현하여 `ThreadLocal` 기준으로 인증 정보를 보관/초기화한다.
+* Filter 구간에서 인증이 성공하면 Context에 `Authentication`을 저장하고, 컨트롤러에서는 그대로 조회해 권한을 확인한다.
+
+### JWT 발급 및 검증
+
+* `JwtService`는 `jjwt` 라이브러리를 사용해 HS256 비밀키 서명, roles claim, 만료시간(`1h`)을 포함한 토큰을 생성/검증한다.
+* `AuthenticationFilter`는 `/login` POST 요청에서 username/password를 추출 → ProviderManager.authenticate() → 성공 시 JWT를 응답으로
+  반환한다.
+* `JwtAuthenticationFilter`는 모든 요청의 `Authorization` 헤더를 파싱해 토큰을 검증하고, 성공 시 `SecurityContextHolder`에 인증 객체를 적재한다.
+
+### Filter Chain 구성
+
+* `OncePerRequestFilter`를 만들어 각 Filter가 요청 당 한 번만 실행되도록 공통 템플릿을 제공한다.
+* `SecurityFilterConfig`에서 `JwtAuthenticationFilter` → `AuthenticationFilter` → `AuthorizationFilter` 순서로
+  `FilterRegistrationBean`을 등록했다.
+* `AuthorizationFilter`는 `SecurityContextHolder`에서 인증 상태를 확인하고 `/admin` 접근 시 `ROLE_ADMIN` 권한이 있는지 검증한다.
+* `SecurityWhitelist`는 `/`, `/login`, Swagger 관련 URL 등을 화이트리스트로 선언해 인증이 없어도 통과하도록 한다.
+
+### 컨트롤러 & 화면
+
+* `LoginController`는 간단한 로그인 페이지(`templates/login.html`) 렌더링과 redirect 파라미터 전달만 담당한다.
+* `TestController`는 `/hello`, `/me`, `/admin`, `/` 엔드포인트 예제로 SecurityContext 값을 확인하거나 권한 검사를 시연한다.
+* Swagger 테스트 편의를 위해 `AuthSwaggerController`를 추가하여 `/login` 엔드포인트를 문서화했다(실제 인증은 Filter에서 처리).
 
 ---
 
@@ -32,8 +83,8 @@ Spring Security는 **Filter 기반 보안 프레임워크**다.
 * **UsernamePasswordAuthenticationToken**
 
   ```java
-  new UsernamePasswordAuthenticationToken(username, password)
-  new UsernamePasswordAuthenticationToken(username, password, authorities)
+  new UsernamePasswordAuthenticationToken(username, password);
+  new UsernamePasswordAuthenticationToken(username, password, authorities);
   ```
 
   로그인 요청 시 "인증 전" 상태로 생성되며, 인증 성공 후 "인증 완료" 상태로 갱신된다.
@@ -167,25 +218,6 @@ public OpenAPI openAPI() {
 }
 ```
 
-Swagger-UI에서:
-
-1. `/login` 요청으로 JWT 발급
-2. **Authorize** 버튼 클릭 → `"Bearer <토큰>"` 입력
-3. 인증된 요청 실행 (`/me`, `/admin` 등)
-
----
-
-## 💡 주요 개선 포인트
-
-* 로그인 시 응답 인코딩 `UTF-8` 적용:
-
-  ```java
-  response.setCharacterEncoding("UTF-8");
-  response.setContentType("application/json; charset=UTF-8");
-  ```
-* 브라우저 환경에서는 JS로 JWT를 LocalStorage에 저장 후 헤더에 수동 추가.
-* Swagger 또는 Postman으로 먼저 인증 플로우 검증 권장.
-
 ---
 
 ## 📚 전체 흐름 정리
@@ -206,22 +238,3 @@ AuthorizationFilter → 권한 체크
      ↓
 Controller 실행
 ```
-
----
-
-## 🧠 핵심 학습 포인트
-
-* Spring Security의 핵심은 “Filter Chain”이다.
-* 인증(Authentication)과 인가(Authorization)는 **서블릿 이전 단계**에서 수행된다.
-* `SecurityContextHolder`는 요청 단위의 임시 저장소이며, 세션이나 JWT를 통해 지속 상태를 유지한다.
-* JWT는 **서버 상태를 저장하지 않고도** 인증을 유지할 수 있는 “서명된 증명서”이다.
-* `HttpSecurity` DSL이 하는 모든 일(필터 등록, 인가 정책 적용)을 직접 코드로 구현할 수 있다.
-
----
-
-## 🧩 프로젝트 목표
-
-이 구현의 목적은 **Spring Security의 내부 원리를 완전히 이해**하고,
-이를 바탕으로 자신만의 **경량 인증/인가 프레임워크**를 구축하는 것이다.
-
----
