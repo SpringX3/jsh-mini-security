@@ -11,6 +11,7 @@ public class InMemoryUserDetailsService implements UserDetailsService {
         users.put(user.getUsername(), user);
     }
 
+    @Override
     public UserDetails loadUserByUsername(String username) {
         return users.get(username);
     }
